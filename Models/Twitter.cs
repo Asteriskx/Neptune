@@ -70,9 +70,7 @@ namespace Neptune.Models
         }
 
         /// <summary>
-        /// 現在再生している曲を Twitter に投稿します。
-        /// <param name=Track>現在再生している曲名。</param>
-        /// <param name=Artist>現在再生している曲のアーティスト名。</param>
+        /// Twitter に何かしら発言をしたい場合、このメソッドを経由する。
         /// </summary>
         public bool Tweet()
         {
