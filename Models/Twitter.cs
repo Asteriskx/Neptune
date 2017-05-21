@@ -1,14 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Configuration;
-using System.Collections.ObjectModel;
-using System.Windows.Media.Imaging;
-using System.Linq;
-using System.Windows.Input;
+using System.Drawing;
 
 using CoreTweet;
-using static System.Console;
 
+using Neptune.Enum;
+using static System.Console;
+using System.Windows.Media.Imaging;
 
 namespace Neptune.Models
 {
@@ -26,6 +26,10 @@ namespace Neptune.Models
         private static string   access_token;
         private static string   access_token_secret;
         #endregion
+
+        // Profile画像取得APIのアドレス
+        private static readonly string PROFILE_IMAGE_URL =
+            "http://api.twitter.com/1/users/profile_image/";
 
         /// <summary>
         /// コンストラクタ
@@ -54,10 +58,10 @@ namespace Neptune.Models
                     // 配列から各認証パラメータメンバに対して格納する
                     switch ( keyElements )
                     {
-                        case 0: consumer_key        = Authorize[ keyElements]; break;
-                        case 1: consumer_key_secret = Authorize[ keyElements]; break;
-                        case 2: access_token        = Authorize[ keyElements]; break;
-                        case 3: access_token_secret = Authorize[ keyElements]; break;
+                        case 0: consumer_key        = Authorize[ ( int ) SwitchType.CONSUMER_KEY ];   break;
+                        case 1: consumer_key_secret = Authorize[ ( int ) SwitchType.CONSUMER_KEY_S ]; break;
+                        case 2: access_token        = Authorize[ ( int ) SwitchType.ACCESS_TOKEN ];   break;
+                        case 3: access_token_secret = Authorize[ ( int ) SwitchType.ACCESS_TOKEN_S ]; break;
                         default: throw new Exception();
                     }
                 }
@@ -109,6 +113,44 @@ namespace Neptune.Models
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// ProfileImage を取得する
+        /// ここは、まだ実装途中。
+        /// </summary>
+        /// <param name="screen_name">Profile Imageを取得するID(screen_name)</param>
+        /// <param name="image_size">Profile Imageのサイズ</param>
+        /// <returns>取得した画像</returns>
+        public BitmapImage GetProfileImage( string screen_name, ImageSize image_size )
+        {
+            // サイズ指定テキストの定義
+            string[] image_size_string = { "minimum", "normal", "bigger" };
+
+            // 画像のURLを取得
+            WebRequest api_req = WebRequest.Create( PROFILE_IMAGE_URL + 
+                                                    screen_name       + 
+                                                    ".xml"            +
+                                                    "?size = "        + 
+                                                    image_size_string[ ( int )image_size ]
+                                                   );
+
+            WebResponse api_res = api_req.GetResponse();
+
+            // 画像を取得
+            WebRequest  image_req = WebRequest.Create( api_res.ResponseUri );
+            WebResponse image_res = image_req.GetResponse();
+
+            // BITMAPに変換
+            Stream stream = image_res.GetResponseStream();
+            BitmapImage bitmap = new BitmapImage( stream );
+
+            // 後始末
+            stream.Close();
+            image_res.Close();
+            api_res.Close();
+
+            return ( bitmap );
         }
     }
 }
